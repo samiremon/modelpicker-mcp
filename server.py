@@ -73,5 +73,12 @@ def pick_and_benchmark_models(
     return report
 
 if __name__ == "__main__":
-    print("[*] Starting ModelPicker MCP server on stdio transport...")
-    mcp.run(transport="stdio")
+    transport = os.getenv("TRANSPORT", "stdio").lower()
+    port = int(os.getenv("PORT", "7860"))
+    
+    if transport == "sse":
+        print(f"[*] Starting ModelPicker MCP server on SSE transport (0.0.0.0:{port})...")
+        mcp.run(transport="sse", host="0.0.0.0", port=port)
+    else:
+        print("[*] Starting ModelPicker MCP server on stdio transport...")
+        mcp.run(transport="stdio")
