@@ -29,24 +29,20 @@ class HFGuard:
         if self.attack_label not in labels:
             raise ValueError(f"{model_id} has labels {labels}, not {self.attack_label!r}")
 
-    def _chunks(self, text: str) -> list[list[int]]:
+    def _chunks(self, text: str) -> list[str]:
         ids = self.tokenizer(text, add_special_tokens=False)["input_ids"]
         step = CHUNK_TOKENS - CHUNK_OVERLAP
-        return [ids[i : i + CHUNK_TOKENS] for i in range(0, max(len(ids), 1), step)]
+        return [self.tokenizer.decode(ids[i : i + CHUNK_TOKENS]) for i in range(0, max(len(ids), 1), step)]
 
     def check(self, text: str) -> Verdict:
         import torch
 
         start = time.perf_counter()
         best = 0.0
+        index = next(i for i, label in self.model.config.id2label.items() if label == self.attack_label)
         with torch.no_grad():
             for chunk in self._chunks(text):
-                inputs = self.tokenizer.prepare_for_model(chunk, return_tensors="pt", truncation=True)
-                logits = self.model(
-                    input_ids=inputs["input_ids"].unsqueeze(0),
-                    attention_mask=inputs["attention_mask"].unsqueeze(0),
-                ).logits[0]
-                probs = torch.softmax(logits, dim=-1)
-                index = next(i for i, l in self.model.config.id2label.items() if l == self.attack_label)
+                inputs = self.tokenizer(chunk, truncation=True, max_length=512, return_tensors="pt")
+                probs = torch.softmax(self.model(**inputs).logits[0], dim=-1)
                 best = max(best, float(probs[index]))
         return Verdict(best >= THRESHOLD, best, (time.perf_counter() - start) * 1000)
