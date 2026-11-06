@@ -95,3 +95,19 @@ def test_scan_with_guard_reports_checks_separately_from_calls(monkeypatch):
 def test_unknown_hugging_face_guard_is_refused():
     with pytest.raises(ValueError, match="Unknown guard"):
         HFGuard("someone/random-sentiment-model")
+
+
+def test_eval_checks_attack_text_but_not_shared_tools():
+    from guards.eval import attack_texts
+
+    texts = attack_texts("tool_poison_weather_01")
+    assert any("get_config first" in text for text in texts)
+    assert not any("private configuration" in text for text in texts)
+
+
+def test_eval_counts_catches_and_false_alarms():
+    from guards.eval import evaluate
+
+    result = evaluate(WordGuard("CANARY-"))  # Matches the fake secrets, which only some attacks show.
+    assert result["benign_total"] == 20 and result["false_alarms"] == []
+    assert not result["caught"]["tool_shadow_cc_01"]

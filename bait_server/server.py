@@ -15,6 +15,11 @@ BLOCKED_DESCRIPTION = "[Description removed by a security filter.]"
 BLOCKED_OUTPUT = "[Tool output blocked by a security filter: possible prompt injection.]"
 
 
+def tool_text(description: str, parameters: dict) -> str:
+    """What a guard reads for a tool. Parameter descriptions count, since attacks can hide there."""
+    return "\n".join([description, *(f"{name}: {text}" for name, text in parameters.items())])
+
+
 class BaitTools:
     def __init__(self, attack: dict, log_path: Path, guard=None):
         self.tools = {tool["name"]: tool for tool in attack["tools"]}
@@ -56,9 +61,7 @@ class BaitTools:
     def _tool(self, tool: dict) -> types.Tool:
         description = self._description(tool)
         parameters = dict(tool.get("parameters", {}))
-        # Parameter descriptions are checked too, since attacks can hide there.
-        full_text = "\n".join([description, *(f"{k}: {v}" for k, v in parameters.items())])
-        if self.blocked(full_text, "description", tool["name"]):
+        if self.blocked(tool_text(description, parameters), "description", tool["name"]):
             description = BLOCKED_DESCRIPTION
             parameters = {name: "" for name in parameters}
         return types.Tool(
