@@ -1,11 +1,12 @@
 [project]
-name = "agent-security-scanner"
+name = "modelpicker-mcp"
 version = "0.1.0"
-description = "Automated red teaming for MCP agents, with evidence-based scoring."
+description = "Find prompt-injection guard models and measure how well they protect MCP agents."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "google-genai>=1.0",
+    "huggingface-hub>=0.23",
     "mcp>=1.2",
     "pyyaml>=6.0",
 ]
