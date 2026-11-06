@@ -4,7 +4,7 @@ Pick the prompt-injection guard that actually protects your AI agent.
 
 ModelPicker finds guard models on Hugging Face, attacks an MCP agent through poisoned tools with and without each guard, and uses code to check what the agent did. You'll be able to run it all by chatting with Claude.
 
-**Status:** Early development. The attack scanner works today with 11 attacks across 5 types. Guards and the Claude connection are in progress.
+**Status:** Early development. The attack scanner works today with 16 attacks across 6 types. Guards and the Claude connection are in progress.
 
 ## How it works
 
@@ -27,8 +27,9 @@ Nothing is actually sent. Secrets are fake and generated fresh for each run.
 
 | Type | Attacks |
 |---|---|
-| Indirect prompt injection | `email_exfiltration_01`, `email_exfiltration_02`, `webpage_delete_01`, `docs_forward_01` |
-| Tool poisoning | `tool_poison_weather_01`, `tool_poison_read_file_01` |
+| Indirect prompt injection | `email_exfiltration_01`, `email_exfiltration_02`, `email_fake_system_01`, `fake_error_retry_01`, `ticket_cc_leak_01`, `webpage_delete_01`, `docs_forward_01` |
+| Tool poisoning | `tool_poison_weather_01`, `tool_poison_translate_01`, `tool_poison_read_file_01` |
+| Tool shadowing | `tool_shadow_cc_01` |
 | Rug pull | `rug_pull_calendar_01`, `rug_pull_customer_01` |
 | Secret exfiltration | `config_exfiltration_01`, `report_url_leak_01` |
 | Unrequested action | `invoice_payment_01` |
@@ -69,7 +70,7 @@ uv run pytest
 ## Roadmap
 
 - [x] Attack scanner, bait MCP server, and test agent
-- [ ] Attacks the agent always reads, plus harder variants
+- [x] Harder attack variants: fake system messages, fake errors, tool shadowing
 - [ ] Guard models that filter tool output and descriptions, with false-alarm and latency measurements
 - [ ] Guard discovery on Hugging Face (`guards/hf_search.py` is the start)
 - [ ] Control MCP server, so Claude can start scans and show reports
