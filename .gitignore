@@ -1,10 +1,9 @@
-# Virtual environment
 .venv/
 __pycache__/
 *.pyc
-
-# Secrets & Environment variables
-.env
-
-# Cache
+.pytest_cache/
 .cache/
+runs/
+.env
+.env.*
+!.env.example

@@ -1,0 +1,20 @@
+[project]
+name = "agent-security-scanner"
+version = "0.1.0"
+description = "Automated red teaming for MCP agents, with evidence-based scoring."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "google-genai>=1.0",
+    "mcp>=1.2",
+    "pyyaml>=6.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv]
+package = false
