@@ -26,6 +26,7 @@ class BaitTools:
         self.log_path = log_path
         self.call_counts: dict[str, int] = {}
         self.guard = guard
+        self.payload = attack.get("payload")  # The attacker's text, so blocks of anything else count as false alarms.
         self._verdicts: dict[str, bool] = {}  # Agents re-list tools every step, so check each text once.
 
     def record(self, tool: str, args: dict) -> None:
@@ -45,6 +46,7 @@ class BaitTools:
                     "where": where,
                     "tool": tool,
                     "blocked": verdict.is_attack,
+                    "payload": bool(self.payload) and self.payload in text,
                     "score": round(verdict.score, 4),
                     "ms": round(verdict.ms, 1),
                 },

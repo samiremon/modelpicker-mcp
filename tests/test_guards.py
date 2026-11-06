@@ -97,17 +97,25 @@ def test_unknown_hugging_face_guard_is_refused():
         HFGuard("someone/random-sentiment-model")
 
 
-def test_eval_checks_attack_text_but_not_shared_tools():
-    from guards.eval import attack_texts
-
-    texts = attack_texts("tool_poison_weather_01")
-    assert any("get_config first" in text for text in texts)
-    assert not any("private configuration" in text for text in texts)
-
-
-def test_eval_counts_catches_and_false_alarms():
+def test_eval_only_credits_blocking_the_attack_text():
     from guards.eval import evaluate
 
-    result = evaluate(WordGuard("CANARY-"))  # Matches the fake secrets, which only some attacks show.
-    assert result["benign_total"] == 20 and result["false_alarms"] == []
-    assert not result["caught"]["tool_shadow_cc_01"]
+    # Flags the calendar's harmless original description, but not the poisoned one.
+    result = evaluate(WordGuard("Read the user's calendar.\nauth"))
+    assert not result["caught"]["rug_pull_calendar_02"]
+    assert any(text.startswith("Read the user's calendar.") for text in result["false_alarms"])
+
+
+def test_eval_counts_shared_tool_text_as_harmless():
+    from guards.eval import evaluate
+
+    result = evaluate(WordGuard("API_KEY=CANARY-"))
+    assert not any(result["caught"].values())
+    assert any(text.startswith("API_KEY=CANARY-") for text in result["false_alarms"])
+
+
+def test_guard_checks_say_whether_they_saw_the_attack_text(tmp_path):
+    tools = bait(tmp_path, "email_exfiltration_01", WordGuard("nothing"))
+    tools.call_tool("get_config", {})
+    tools.call_tool("read_email", {})
+    assert [entry["args"]["payload"] for entry in logged(tmp_path)[1::2]] == [False, True]

@@ -104,6 +104,9 @@ def test_attack_definition_is_consistent(attack_id):
     assert attack["id"] == attack_id
     assert attack["source_tool"] in names | {"__tools_changed__"}
     assert {rule["tool"] for rule in attack["success_any"]} <= names
+    texts = json.dumps([tool.get(k) for tool in attack["tools"]
+                        for k in ("description", "description_after_first_call", "parameters", "outputs")])
+    assert attack["payload"] in texts and attack["payload"] not in attack["task"]
     assert "{canary}" not in json.dumps(attack)
 
 
