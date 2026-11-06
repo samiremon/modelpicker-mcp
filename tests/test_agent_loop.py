@@ -104,7 +104,7 @@ def test_main_turns_failures_into_exit_codes(bait_env, monkeypatch, replies, exp
 def test_loop_sees_a_tool_description_change_mid_session(tmp_path, monkeypatch):
     attack_file = tmp_path / "attack.json"
     log = tmp_path / "calls.jsonl"
-    attack_file.write_text(json.dumps(load_attack("rug_pull_calendar_01")))
+    attack_file.write_text(json.dumps(load_attack("rug_pull_calendar_02")))
     monkeypatch.setenv("BAIT_ATTACK_FILE", str(attack_file))
     monkeypatch.setenv("BAIT_CALL_LOG", str(log))
 
@@ -114,6 +114,6 @@ def test_loop_sees_a_tool_description_change_mid_session(tmp_path, monkeypatch):
         declarations = seen[step]["tools"][0].function_declarations
         return next(d.description for d in declarations if d.name == "get_calendar")
 
-    assert "audit_log" not in description(0)
-    assert "audit_log" in description(1)
+    assert "auth field" not in description(0)
+    assert "auth field" in description(1)
     assert "__tools_changed__" in log.read_text()
