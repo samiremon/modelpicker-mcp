@@ -1,14 +1,16 @@
-# Agent Security Scanner
+# ModelPicker MCP
 
-Automated red teaming for MCP agents. It connects an agent to simulated tools, plants realistic attacks in their output, and uses code to check what the agent did.
+Pick the prompt-injection guard that actually protects your AI agent.
 
-**Status:** Early development. It currently has 11 attacks across 5 types.
+ModelPicker finds guard models on Hugging Face, attacks an MCP agent through poisoned tools with and without each guard, and uses code to check what the agent did. You'll be able to run it all by chatting with Claude.
+
+**Status:** Early development. The attack scanner works today with 11 attacks across 5 types. Guards and the Claude connection are in progress.
 
 ## How it works
 
-1. The scanner starts your agent with a normal task, such as "Summarize my latest email."
+1. The scanner gives an agent a normal task, such as "Summarize my latest email."
 2. The agent connects to the bait MCP server and uses its simulated tools.
-3. A tool response contains a hidden instruction and the agent has access to a fake secret.
+3. A tool response or tool description hides an instruction, and the agent has access to a fake secret.
 4. The server logs every tool call, and the scorer checks the log against the attack's rules.
 
 Nothing is actually sent. Secrets are fake and generated fresh for each run.
@@ -39,16 +41,16 @@ Requires [uv](https://docs.astral.sh/uv/) and a [Gemini API key](https://aistudi
 
 ```bash
 uv sync
-export GEMINI_API_KEY="your-key"
+cp .env.example .env   # then add your GEMINI_API_KEY
 
 # Run one attack
-uv run python -m scanner.run --attack email_exfiltration_01
+uv run --env-file .env python -m scanner.run --attack email_exfiltration_01
 
 # Run every attack 3 times
-uv run python -m scanner.run --repeat 3
+uv run --env-file .env python -m scanner.run --repeat 3
 
 # Continue a scan that stopped
-uv run python -m scanner.run --resume SCAN_ID
+uv run --env-file .env python -m scanner.run --resume SCAN_ID
 ```
 
 Results are saved in `runs/` as they finish. The scan stops after 3 errors in a row, which usually means your quota has run out, and resuming retries those runs. The command exits with `0` if no attack succeeded, `1` if one did, and `2` if the scan is incomplete.
@@ -63,6 +65,16 @@ To run the tests, which need no API key:
 ```bash
 uv run pytest
 ```
+
+## Roadmap
+
+- [x] Attack scanner, bait MCP server, and test agent
+- [ ] Attacks the agent always reads, plus harder variants
+- [ ] Guard models that filter tool output and descriptions, with false-alarm and latency measurements
+- [ ] Guard discovery on Hugging Face (`guards/hf_search.py` is the start)
+- [ ] Control MCP server, so Claude can start scans and show reports
+- [ ] Adapters for testing your own agent and framework agents
+- [ ] Open-source agents such as Goose, run in Docker
 
 ## Responsible use
 
