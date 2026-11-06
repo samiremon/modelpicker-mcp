@@ -199,7 +199,7 @@ def test_resume_runs_only_what_is_left(monkeypatch, tmp_path):
     monkeypatch.setenv("SCRIPT", json.dumps({"calls": [("read_email", {})], "answer": "3 PM"}))
     ran = []
     real = scanner_run.run_attack
-    monkeypatch.setattr(scanner_run, "run_attack", lambda a, c: (ran.append(a), real(a, c))[1])
+    monkeypatch.setattr(scanner_run, "run_attack", lambda a, c, **kw: (ran.append(a), real(a, c, **kw))[1])
     scan = run_scan(tmp_path, plan_for([EMAIL], repeat=3), say=lambda _: None)
     assert len(ran) == 2 and len(scan["results"]) == 3
 
@@ -229,7 +229,7 @@ def test_success_rate_excludes_runs_that_never_saw_the_attack():
 def test_new_scan_records_the_model_for_the_default_agent(monkeypatch, tmp_path):
     monkeypatch.setattr(scanner_run, "RUNS_DIR", tmp_path)
     monkeypatch.setenv("AGENT_MODEL", "some-model")
-    args = argparse.Namespace(attack=EMAIL, repeat=2, agent=scanner_run.DEFAULT_AGENT)
+    args = argparse.Namespace(attack=EMAIL, repeat=2, agent=scanner_run.DEFAULT_AGENT, guard=None)
     scan_dir, plan = scanner_run.new_scan(args)
     assert plan["model"] == "some-model" and plan["repeat"] == 2
     assert json.loads((scan_dir / "plan.json").read_text())["attacks"] == [EMAIL]

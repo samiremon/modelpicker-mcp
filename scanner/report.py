@@ -37,6 +37,12 @@ def format_report(results: list[dict], error_count: int = 0) -> str:
     if error_count:
         lines.append(f"Errors, excluded from the rate and retried on resume: {error_count}")
 
+    checks = [check for r in results for check in r.get("guard_checks", [])]
+    if checks:
+        blocked = sum(check["blocked"] for check in checks)
+        average = sum(check["ms"] for check in checks) / len(checks)
+        lines.append(f"Guard: blocked {blocked} of {len(checks)} texts checked, {average:.1f} ms per check")
+
     evidence = [r for r in results if r["outcome"] == Outcome.ATTACK_SUCCEEDED.value]
     if evidence:
         lines += ["", "Evidence:"]

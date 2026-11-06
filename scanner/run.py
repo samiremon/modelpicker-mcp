@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from agents.connection import DEFAULT_MODEL
+from bait_server.server import GUARD
 from scanner.attacks import all_attack_ids, load_attack
 from scanner.report import format_report
 from scanner.scorer import Outcome, Score, score
@@ -29,6 +30,7 @@ class RunResult:
     score: Score
     answer: str
     stderr: str
+    guard_checks: list[dict]
 
 
 def read_jsonl(path: Path) -> list[dict]:
@@ -42,7 +44,9 @@ def append_jsonl(path: Path, entry: dict) -> None:
         file.write(json.dumps(entry) + "\n")
 
 
-def run_attack(attack_id: str, agent_command: str, timeout: float = TIMEOUT_SECONDS) -> RunResult:
+def run_attack(
+    attack_id: str, agent_command: str, timeout: float = TIMEOUT_SECONDS, guard: str | None = None
+) -> RunResult:
     attack = load_attack(attack_id)
     with tempfile.TemporaryDirectory(prefix="agent-scan-") as run_dir:
         attack_file = Path(run_dir) / "attack.json"
@@ -54,6 +58,9 @@ def run_attack(attack_id: str, agent_command: str, timeout: float = TIMEOUT_SECO
             "BAIT_ATTACK_FILE": str(attack_file),
             "BAIT_CALL_LOG": str(call_log),
         }
+        env.pop("BAIT_GUARD", None)
+        if guard:
+            env["BAIT_GUARD"] = guard
         try:
             process = subprocess.run(
                 shlex.split(agent_command),
@@ -66,8 +73,12 @@ def run_attack(attack_id: str, agent_command: str, timeout: float = TIMEOUT_SECO
             exit_code, answer, stderr = process.returncode, process.stdout, process.stderr
         except subprocess.TimeoutExpired:
             exit_code, answer, stderr = None, "", f"Timed out after {timeout} seconds."
-        calls = read_jsonl(call_log)
-    return RunResult(attack_id, score(attack, calls, exit_code, answer), answer.strip(), stderr.strip())
+        log = read_jsonl(call_log)
+    guard_checks = [entry["args"] for entry in log if entry["tool"] == GUARD]
+    calls = [entry for entry in log if entry["tool"] != GUARD]
+    return RunResult(
+        attack_id, score(attack, calls, exit_code, answer), answer.strip(), stderr.strip(), guard_checks
+    )
 
 
 def run_scan(scan_dir: Path, plan: dict, say=print) -> dict:
@@ -83,7 +94,7 @@ def run_scan(scan_dir: Path, plan: dict, say=print) -> dict:
     errors = consecutive_errors = 0
     stopped_early = False
     for position, attack_id in enumerate(pending, start=1):
-        result = run_attack(attack_id, plan["agent"])
+        result = run_attack(attack_id, plan["agent"], guard=plan.get("guard"))
         say(f"[{position}/{len(pending)}] {attack_id}: {result.score.outcome.value}")
         if result.score.outcome is Outcome.ERROR:
             errors += 1
@@ -102,6 +113,7 @@ def run_scan(scan_dir: Path, plan: dict, say=print) -> dict:
                 "outcome": result.score.outcome.value,
                 "evidence": result.score.evidence,
                 "answer": result.answer,
+                "guard_checks": result.guard_checks,
             },
         )
     return {"errors": errors, "stopped_early": stopped_early, "results": read_jsonl(results_path)}
@@ -114,6 +126,7 @@ def new_scan(args: argparse.Namespace) -> tuple[Path, dict]:
         "attacks": attacks,
         "repeat": args.repeat,
         "agent": args.agent,
+        "guard": args.guard,
         "model": os.environ.get("AGENT_MODEL", DEFAULT_MODEL) if args.agent is DEFAULT_AGENT else None,
         "started_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -131,6 +144,7 @@ def main() -> int:
     parser.add_argument("--attack", help="Run one attack ID from attacks/. By default, runs them all.")
     parser.add_argument("--agent", default=DEFAULT_AGENT, help="Command that starts the agent")
     parser.add_argument("--repeat", type=int, default=1, help="Runs per attack")
+    parser.add_argument("--guard", help="Guard to filter tool text: 'keyword' or a Hugging Face model ID")
     parser.add_argument("--resume", metavar="SCAN_ID", help="Continue an earlier scan from runs/")
     args = parser.parse_args()
 
@@ -139,7 +153,8 @@ def main() -> int:
         plan = json.loads((scan_dir / "plan.json").read_text(encoding="utf-8"))
     else:
         scan_dir, plan = new_scan(args)
-    print(f"Scan {scan_dir.name}: {len(plan['attacks'])} attacks, {plan['repeat']} runs each")
+    guard = f", guard {plan['guard']}" if plan.get("guard") else ", no guard"
+    print(f"Scan {scan_dir.name}: {len(plan['attacks'])} attacks, {plan['repeat']} runs each{guard}")
 
     scan = run_scan(scan_dir, plan)
     print()
