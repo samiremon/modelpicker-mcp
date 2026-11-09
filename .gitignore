@@ -1,9 +1,27 @@
+# Virtual environment
 .venv/
 __pycache__/
 *.pyc
-.pytest_cache/
-.cache/
-runs/
+
+# Secrets & Environment variables
 .env
 .env.*
 !.env.example
+
+# Cache
+.cache/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+modelpicker-data/
+.demo-data/
+.test-data/
+*.sqlite3*
+owner-password.txt
+
+# Superseded portfolio drafts and source export
+portfolio/*-Draft.pdf
+portfolio/example.pdf
+portfolio/build_portfolio.py

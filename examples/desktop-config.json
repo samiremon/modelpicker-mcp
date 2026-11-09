@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "modelpicker": {
+      "command": "/ABSOLUTE/PATH/TO/.venv/bin/python",
+      "args": ["-m", "modelpicker", "serve"],
+      "env": {
+        "MODELPICKER_HOME": "/ABSOLUTE/PATH/TO/modelpicker-data",
+        "MODELPICKER_DATASET_DIR": "/ABSOLUTE/PATH/TO/YOUR/DATASETS",
+        "MODELPICKER_CPU_THREADS": "2"
+      }
+    }
+  }
+}

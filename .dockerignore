@@ -1,0 +1,17 @@
+.venv
+.git
+.env
+.env.*
+!.env.example
+.demo-data
+.test-data
+modelpicker-data
+__pycache__
+**/__pycache__
+.pytest_cache
+.ruff_cache
+*.egg-info
+*.sqlite3*
+owner-password.txt
+build
+dist

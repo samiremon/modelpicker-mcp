@@ -1,0 +1,25 @@
+text,label
+"The delivery arrived early and everything was in perfect condition.",POSITIVE
+"The support agent solved my issue quickly and politely.",POSITIVE
+"I love the clear instructions and simple setup.",POSITIVE
+"Excellent quality for the price. I would buy it again.",POSITIVE
+"The app is fast and easy to navigate.",POSITIVE
+"Thank you for replacing the damaged item so quickly.",POSITIVE
+"The new update fixed my problem and works beautifully.",POSITIVE
+"The battery lasts all day and the screen looks great.",POSITIVE
+"I am very pleased with the service I received.",POSITIVE
+"A wonderful experience from checkout to delivery.",POSITIVE
+"The product exceeded my expectations.",POSITIVE
+"Friendly staff and a reliable service.",POSITIVE
+"The delivery was late and the package was broken.",NEGATIVE
+"Support ignored my messages for a week.",NEGATIVE
+"The instructions are confusing and setup failed.",NEGATIVE
+"Terrible quality. It stopped working the next day.",NEGATIVE
+"The app crashes every time I try to sign in.",NEGATIVE
+"My replacement arrived damaged too. Very disappointing.",NEGATIVE
+"The new update made everything slower.",NEGATIVE
+"The battery dies after an hour and the screen flickers.",NEGATIVE
+"I regret paying for this service.",NEGATIVE
+"An awful experience with hidden fees and no help.",NEGATIVE
+"The product failed to meet even basic expectations.",NEGATIVE
+"Rude staff and unreliable service.",NEGATIVE

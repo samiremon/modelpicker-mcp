@@ -1,0 +1,2 @@
+# Install CPU torch first; see README to avoid downloading CUDA packages.
+-e .[local]
